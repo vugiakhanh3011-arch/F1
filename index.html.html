@@ -1,0 +1,594 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Life's Crossroads</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,400;9..144,500;9..144,600;9..144,700&family=Source+Serif+4:wght@400;500;600&family=IBM+Plex+Mono:wght@400;500&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --ink: #1c1b29;
+    --ink-2: #26243a;
+    --parchment: #ede6d6;
+    --parchment-dim: #c9c0aa;
+    --thread-gold: #c9a227;
+    --rose-ember: #b8563f;
+    --moss: #5c7a5c;
+    --slate: #5b7fae;
+    --line: rgba(237,230,214,0.14);
+  }
+  *{box-sizing:border-box;}
+  html,body{margin:0;padding:0;}
+  body{
+    background: radial-gradient(ellipse at top, var(--ink-2), var(--ink) 65%);
+    color: var(--parchment);
+    font-family: 'Source Serif 4', serif;
+    min-height:100vh;
+    -webkit-font-smoothing:antialiased;
+  }
+  #app{
+    max-width: 1080px;
+    margin: 0 auto;
+    padding: 28px 20px 80px;
+    display:grid;
+    grid-template-columns: 220px 1fr;
+    gap: 32px;
+  }
+  @media (max-width: 760px){
+    #app{grid-template-columns: 1fr; padding-top:16px;}
+    #timelineCol{order:2;}
+  }
+
+  /* ---- Header ---- */
+  .brand{
+    grid-column: 1 / -1;
+    display:flex; align-items:baseline; justify-content:space-between;
+    border-bottom: 1px solid var(--line);
+    padding-bottom: 14px;
+    margin-bottom: 6px;
+  }
+  .brand h1{
+    font-family:'Fraunces', serif;
+    font-weight:600;
+    font-optical-sizing:auto;
+    font-size: 28px;
+    letter-spacing: 0.01em;
+    margin:0;
+  }
+  .brand .age{
+    font-family:'IBM Plex Mono', monospace;
+    font-size: 12px;
+    color: var(--thread-gold);
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+  }
+
+  /* ---- Thread timeline (signature element) ---- */
+  #timelineCol{
+    position:relative;
+    padding-top: 10px;
+  }
+  #timelineCol h3{
+    font-family:'IBM Plex Mono', monospace;
+    font-size:11px;
+    letter-spacing:0.12em;
+    text-transform:uppercase;
+    color: var(--parchment-dim);
+    margin: 0 0 14px 2px;
+  }
+  .thread-wrap{ position:relative; padding-left: 22px; }
+  .thread-svg{ position:absolute; left:0; top:0; height:100%; width:22px; }
+  .thread-path{
+    fill:none;
+    stroke: var(--thread-gold);
+    stroke-width:2;
+    stroke-linecap:round;
+    stroke-dasharray: 1400;
+    stroke-dashoffset: 1400;
+    transition: stroke-dashoffset 1.1s ease;
+  }
+  .bead{
+    display:flex; align-items:center; gap:10px;
+    margin-bottom: 20px;
+    opacity:0;
+    transform: translateX(-6px);
+    animation: beadIn 0.5s ease forwards;
+  }
+  @keyframes beadIn{ to{opacity:1; transform:translateX(0);} }
+  .bead .dot{
+    width:9px; height:9px; border-radius:50%;
+    background: var(--thread-gold);
+    box-shadow: 0 0 0 3px var(--ink), 0 0 8px rgba(201,162,39,0.6);
+    flex-shrink:0;
+    margin-left:-27px;
+  }
+  .bead .label{
+    font-size: 12.5px;
+    line-height:1.35;
+    color: var(--parchment-dim);
+  }
+  .bead .label b{ color:var(--parchment); font-weight:500; }
+  .bead.current .dot{ background: var(--rose-ember); box-shadow:0 0 0 3px var(--ink), 0 0 10px rgba(184,86,63,0.8);}
+
+  /* ---- Stats ---- */
+  .stats{
+    margin-top: 26px;
+    display:flex; flex-direction:column; gap:12px;
+  }
+  .stat-row{ display:flex; flex-direction:column; gap:4px; }
+  .stat-row .stat-label{
+    font-family:'IBM Plex Mono', monospace;
+    font-size: 10.5px;
+    letter-spacing:0.08em;
+    text-transform:uppercase;
+    color: var(--parchment-dim);
+    display:flex; justify-content:space-between;
+  }
+  .stat-track{ height:5px; background:rgba(237,230,214,0.1); border-radius:3px; overflow:hidden; }
+  .stat-fill{ height:100%; border-radius:3px; transition: width 0.6s ease; }
+  .fill-emotional{ background: var(--rose-ember); }
+  .fill-social{ background: var(--slate); }
+  .fill-career{ background: var(--moss); }
+
+  /* ---- Main scene panel ---- */
+  main{ min-width:0; }
+  .epoch-tag{
+    font-family:'IBM Plex Mono', monospace;
+    font-size: 11px;
+    letter-spacing:0.14em;
+    text-transform:uppercase;
+    color: var(--thread-gold);
+    margin-bottom: 10px;
+  }
+  .scene-title{
+    font-family:'Fraunces', serif;
+    font-weight:600;
+    font-size: clamp(22px, 3vw, 30px);
+    margin: 0 0 14px;
+    line-height:1.15;
+  }
+  .scene-text{
+    font-size: 16.5px;
+    line-height: 1.7;
+    color: rgba(237,230,214,0.92);
+    margin-bottom: 26px;
+    white-space: pre-line;
+  }
+  .ledger-note{
+    font-family:'IBM Plex Mono', monospace;
+    font-size: 11.5px;
+    color: var(--parchment-dim);
+    border-left: 2px solid var(--thread-gold);
+    padding: 6px 0 6px 12px;
+    margin-bottom: 22px;
+    opacity:0.85;
+  }
+
+  .choices{ display:flex; flex-direction:column; gap:10px; }
+  .choice-card{
+    background: rgba(237,230,214,0.04);
+    border: 1px solid var(--line);
+    border-radius: 4px;
+    padding: 14px 16px;
+    text-align:left;
+    cursor:pointer;
+    color: var(--parchment);
+    font-family:'Source Serif 4', serif;
+    font-size: 15px;
+    line-height:1.45;
+    transition: border-color 0.2s ease, background 0.2s ease, transform 0.15s ease;
+    position:relative;
+  }
+  .choice-card:hover{
+    border-color: var(--thread-gold);
+    background: rgba(201,162,39,0.07);
+    transform: translateX(3px);
+  }
+  .choice-card:focus-visible{ outline: 2px solid var(--thread-gold); outline-offset:2px; }
+  .choice-card .k{
+    font-family:'IBM Plex Mono', monospace;
+    font-size: 10px;
+    color: var(--thread-gold);
+    letter-spacing:0.1em;
+    text-transform:uppercase;
+    display:block;
+    margin-bottom: 5px;
+  }
+
+  .continue-btn{
+    margin-top: 8px;
+    background: var(--thread-gold);
+    color: var(--ink);
+    border:none;
+    padding: 12px 22px;
+    font-family:'IBM Plex Mono', monospace;
+    font-size: 12px;
+    letter-spacing:0.08em;
+    text-transform:uppercase;
+    border-radius:3px;
+    cursor:pointer;
+    font-weight:500;
+  }
+  .continue-btn:hover{ background:#ddb544; }
+
+  /* ---- Ending screen ---- */
+  .ending-card{
+    border: 1px solid var(--thread-gold);
+    padding: 26px;
+    border-radius: 4px;
+    background: rgba(201,162,39,0.05);
+  }
+  .ending-card h2{
+    font-family:'Fraunces', serif;
+    font-size: 26px;
+    margin:0 0 8px;
+  }
+  .ending-stats{ display:flex; gap:22px; margin:20px 0; flex-wrap:wrap; }
+  .ending-stats div{ font-family:'IBM Plex Mono', monospace; font-size:12px; color:var(--parchment-dim); }
+  .ending-stats b{ display:block; color:var(--parchment); font-size:18px; font-family:'Fraunces',serif; }
+  .restart-btn{
+    margin-top: 10px;
+    background: transparent;
+    border: 1px solid var(--parchment-dim);
+    color: var(--parchment);
+    padding: 10px 18px;
+    font-family:'IBM Plex Mono', monospace;
+    font-size: 11.5px;
+    letter-spacing:0.08em;
+    text-transform:uppercase;
+    border-radius:3px;
+    cursor:pointer;
+  }
+  .restart-btn:hover{ border-color: var(--thread-gold); color: var(--thread-gold); }
+
+  @media (prefers-reduced-motion: reduce){
+    .bead, .thread-path, .choice-card, .stat-fill{ animation:none !important; transition:none !important; }
+  }
+</style>
+</head>
+<body>
+<div id="app">
+  <div class="brand" style="grid-column:1/-1;">
+    <h1>Life's Crossroads</h1>
+    <div class="age" id="ageLabel">AGE 8 · CHILDHOOD</div>
+  </div>
+
+  <div id="timelineCol">
+    <h3>The Thread</h3>
+    <div class="thread-wrap">
+      <svg class="thread-svg" id="threadSvg" preserveAspectRatio="none">
+        <path class="thread-path" id="threadPath" d=""></path>
+      </svg>
+      <div id="beads"></div>
+    </div>
+    <div class="stats">
+      <div class="stat-row">
+        <span class="stat-label"><span>Emotional</span></span>
+        <div class="stat-track"><div class="stat-fill fill-emotional" id="fillEmotional"></div></div>
+      </div>
+      <div class="stat-row">
+        <span class="stat-label"><span>Social</span></span>
+        <div class="stat-track"><div class="stat-fill fill-social" id="fillSocial"></div></div>
+      </div>
+      <div class="stat-row">
+        <span class="stat-label"><span>Career</span></span>
+        <div class="stat-track"><div class="stat-fill fill-career" id="fillCareer"></div></div>
+      </div>
+    </div>
+  </div>
+
+  <main id="main"></main>
+</div>
+
+<script>
+/* =========================================================
+   LIFE'S CROSSROADS — prototype narrative engine
+   Node-based scene graph, "beads on strings" epoch structure,
+   life ledger for cross-epoch callbacks, drifting personality
+   stats that softly reweight later content.
+   ========================================================= */
+
+const state = {
+  age: 8,
+  epoch: "Childhood",
+  stats: { emotional: 50, social: 50, career: 30 },
+  traits: { riskTolerance: 50, empathy: 50, ambition: 50 },
+  ledger: [],       // { text } — permanent record shown on timeline
+  currentSceneId: "child_1",
+  history: []        // scene ids visited, for the bead trail
+};
+
+function clamp(n){ return Math.max(0, Math.min(100, n)); }
+
+function applyEffects(effects){
+  if(!effects) return;
+  if(effects.stats){
+    for(const k in effects.stats){ state.stats[k] = clamp(state.stats[k] + effects.stats[k]); }
+  }
+  if(effects.traits){
+    for(const k in effects.traits){ state.traits[k] = clamp(state.traits[k] + effects.traits[k]); }
+  }
+  if(effects.age) state.age += effects.age;
+  if(effects.epoch) state.epoch = effects.epoch;
+  if(effects.ledger) state.ledger.push(effects.ledger);
+}
+
+/* ---------------------------------------------------------
+   SCENE GRAPH
+   Each scene: id, epoch, title, text(fn or string), choices[]
+   choice: { key, label, effects, next }  — next can be a fn
+   for stat/ledger-conditional branching (dynamic routing).
+--------------------------------------------------------- */
+const scenes = {
+
+  // ---------------- CHILDHOOD ----------------
+  child_1: {
+    epoch: "Childhood",
+    title: "The Talent Show",
+    text: "Your school is holding a talent show. You've been practicing a magic trick for weeks, but your hands still shake when you think about the stage. Your best friend says they'll do it with you if you want.",
+    choices: [
+      { key:"A", label:"Perform solo — you want this win to be yours alone.",
+        effects:{ stats:{emotional:4, social:-4, career:6}, traits:{ambition:8, riskTolerance:5},
+          ledger:"At 8, chose to stand alone on a stage rather than share the spotlight." },
+        next:"child_2" },
+      { key:"B", label:"Perform together with your friend.",
+        effects:{ stats:{emotional:6, social:8, career:2}, traits:{empathy:6},
+          ledger:"At 8, chose a friend's company over the solo spotlight." },
+        next:"child_2" },
+      { key:"C", label:"Back out. It's not worth the fear.",
+        effects:{ stats:{emotional:-6, social:0, career:-4}, traits:{riskTolerance:-8},
+          ledger:"At 8, let fear cancel something you'd worked toward." },
+        next:"child_2" }
+    ]
+  },
+  child_2: {
+    epoch: "Childhood",
+    title: "A Broken Window",
+    text: "You and some kids were playing ball near Mr. Alvarez's house. It smashed his window. No one saw who threw it — it was you. The other kids are already blaming the new kid, Sam.",
+    choices: [
+      { key:"A", label:"Admit it was you.",
+        effects:{ stats:{emotional:2, social:2}, traits:{empathy:5},
+          ledger:"At 9, told the truth even though it cost you." },
+        next:"teen_1" },
+      { key:"B", label:"Let Sam take the blame. It's just easier.",
+        effects:{ stats:{emotional:-8, social:4}, traits:{empathy:-10},
+          ledger:"At 9, let someone else pay for something you did." },
+        next:"teen_1" }
+    ]
+  },
+
+  // ---------------- ADOLESCENCE ----------------
+  teen_1: {
+    epoch: "Adolescence",
+    title: "The Group Project",
+    text: (s)=> `Years later, in tenth grade, you're assigned a group project with three classmates who barely show up. The deadline is tomorrow.${s.traits.ambition>60 ? " You've built a reputation as the person who fixes things." : ""}`,
+    choices: [
+      { key:"A", label:"Do the whole thing yourself overnight.",
+        effects:{ stats:{emotional:-8, career:10}, traits:{ambition:6} },
+        next:"teen_2" },
+      { key:"B", label:"Confront the group and split the remaining work fairly.",
+        effects:{ stats:{emotional:2, social:6, career:4}, traits:{empathy:4} },
+        next:"teen_2" },
+      { key:"C", label:"Let the grade suffer. It's one project.",
+        effects:{ stats:{emotional:4, career:-6}, traits:{ambition:-6} },
+        next:"teen_2" }
+    ]
+  },
+  teen_2: {
+    epoch: "Adolescence",
+    title: "First Heartbreak",
+    text: "Your first serious relationship ends, suddenly and without much explanation. You have a choice in how you carry it into the rest of the year.",
+    choices: [
+      { key:"A", label:"Throw yourself into schoolwork to numb it.",
+        effects:{ stats:{emotional:-4, career:8, social:-6} },
+        next:(s)=> s.ledger.some(l=>l.includes("truth")) ? "adult_1" : "adult_1" },
+      { key:"B", label:"Lean on friends and talk it through.",
+        effects:{ stats:{emotional:8, social:6} },
+        next:"adult_1" },
+      { key:"C", label:"Shut down and withdraw from everyone for a while.",
+        effects:{ stats:{emotional:-10, social:-10}, traits:{empathy:-4} },
+        next:"adult_1" }
+    ]
+  },
+
+  // ---------------- EARLY ADULTHOOD ----------------
+  adult_1: {
+    epoch: "Early Adulthood",
+    title: "Two Offers",
+    text: (s)=> `You're 22. You have two job offers: a stable, well-paid position at a large company, and a shaky but exciting role at a five-person startup building something you actually believe in.${s.traits.riskTolerance>65 ? " Every instinct in you leans toward the leap." : s.traits.riskTolerance<35 ? " The idea of instability makes your stomach turn." : ""}`,
+    choices: [
+      { key:"A", label:"Take the stable corporate job.",
+        effects:{ stats:{career:8, emotional:-2}, traits:{riskTolerance:-6}, age:2,
+          ledger:"At 22, chose security over uncertainty." },
+        next:"adult_2" },
+      { key:"B", label:"Take the risk on the startup.",
+        effects:{ stats:{career:4, emotional:6}, traits:{riskTolerance:10, ambition:6}, age:2,
+          ledger:"At 22, bet on something uncertain because you believed in it." },
+        next:"adult_2" }
+    ]
+  },
+  adult_2: {
+    epoch: "Early Adulthood",
+    title: "A Parent's Call",
+    text: "Your mother calls — your father's health has taken a turn. She doesn't ask you to come home outright, but you can hear it underneath everything she says.",
+    choices: [
+      { key:"A", label:"Move back home for a while to help.",
+        effects:{ stats:{social:10, career:-8, emotional:4}, traits:{empathy:8},
+          ledger:"At 24, paused your own path to be present for family." },
+        next:"midlife_1" },
+      { key:"B", label:"Support from a distance — calls, money, visits.",
+        effects:{ stats:{social:2, career:4}, ledger:"At 24, chose to support family without stepping away from your own life." },
+        next:"midlife_1" },
+      { key:"C", label:"You're too deep in your career to step back right now.",
+        effects:{ stats:{social:-10, career:8, emotional:-6}, traits:{ambition:6},
+          ledger:"At 24, chose career momentum over your father's illness." },
+        next:"midlife_1" }
+    ]
+  },
+
+  // ---------------- MIDLIFE (convergence point — all early-adult paths funnel here) ----------------
+  midlife_1: {
+    epoch: "Midlife",
+    title: "The Reckoning",
+    text: (s)=>{
+      const strongCareer = s.stats.career>65;
+      const weakSocial = s.stats.social<40;
+      let extra = "";
+      if(strongCareer && weakSocial) extra = " Your career has flourished. Your phone, when it rings, is rarely a friend.";
+      else if(!strongCareer && !weakSocial) extra = " Your career never quite took off the way you hoped, but your life is full of people who'd show up at 3am if you called.";
+      return `You're 40. A milestone birthday has a way of making a person take inventory.${extra} You start to wonder what you'd do differently.`;
+    },
+    choices: [
+      { key:"A", label:"Make a major career pivot, even now.",
+        effects:{ stats:{career:6, emotional:6}, traits:{riskTolerance:8}, age:10,
+          ledger:"At 40, chose to reinvent rather than settle." },
+        next:"later_1" },
+      { key:"B", label:"Recommit to relationships you've let fade.",
+        effects:{ stats:{social:12, emotional:8}, age:10,
+          ledger:"At 40, chose to rebuild what had quietly drifted apart." },
+        next:"later_1" },
+      { key:"C", label:"Accept where you are. Contentment doesn't require change.",
+        effects:{ stats:{emotional:6}, age:10,
+          ledger:"At 40, chose peace with the life you already had." },
+        next:"later_1" }
+    ]
+  },
+
+  // ---------------- LATER LIFE ----------------
+  later_1: {
+    epoch: "Later Life",
+    title: "What Remains",
+    text: (s)=> `You're 65 now. Looking back, the shape of your life has become clear — not as a single choice, but as the accumulation of small ones. ${state.ledgerSummaryHook || ""}`,
+    choices: [
+      { key:"A", label:"Write it all down — for the people who come after you.",
+        effects:{ stats:{emotional:8}, ledger:"At 65, chose to leave a record behind." },
+        next:"ending" },
+      { key:"B", label:"Let the story stay lived-in memory, not written record.",
+        effects:{ stats:{emotional:4} },
+        next:"ending" }
+    ]
+  },
+
+  ending: { epoch:"Later Life", title:"__ENDING__", text:"", choices:[] }
+};
+
+/* ---------------------------------------------------------
+   RENDERING
+--------------------------------------------------------- */
+const mainEl = document.getElementById('main');
+const beadsEl = document.getElementById('beads');
+const threadPath = document.getElementById('threadPath');
+const threadSvg = document.getElementById('threadSvg');
+const ageLabel = document.getElementById('ageLabel');
+
+function renderStats(){
+  document.getElementById('fillEmotional').style.width = state.stats.emotional + '%';
+  document.getElementById('fillSocial').style.width = state.stats.social + '%';
+  document.getElementById('fillCareer').style.width = state.stats.career + '%';
+  ageLabel.textContent = `AGE ${state.age} · ${state.epoch.toUpperCase()}`;
+}
+
+function renderTimeline(){
+  beadsEl.innerHTML = '';
+  state.ledger.forEach((entry, i)=>{
+    const div = document.createElement('div');
+    div.className = 'bead' + (i === state.ledger.length-1 ? ' current' : '');
+    div.style.animationDelay = (i*0.03)+'s';
+    div.innerHTML = `<span class="dot"></span><span class="label">${entry}</span>`;
+    beadsEl.appendChild(div);
+  });
+  // resize svg + draw path down the column
+  requestAnimationFrame(()=>{
+    const h = beadsEl.offsetHeight || 40;
+    threadSvg.setAttribute('viewBox', `0 0 22 ${h}`);
+    threadSvg.style.height = h+'px';
+    threadPath.setAttribute('d', `M11 4 L11 ${h-4}`);
+    const len = h;
+    threadPath.style.strokeDasharray = len;
+    threadPath.style.strokeDashoffset = 0; // animate in
+  });
+}
+
+function renderScene(){
+  const scene = scenes[state.currentSceneId];
+  renderStats();
+
+  if(scene.id === 'ending' || state.currentSceneId === 'ending'){
+    renderEnding();
+    return;
+  }
+
+  const text = typeof scene.text === 'function' ? scene.text(state) : scene.text;
+
+  mainEl.innerHTML = `
+    <div class="epoch-tag">${scene.epoch}</div>
+    <h2 class="scene-title">${scene.title}</h2>
+    <div class="scene-text">${text}</div>
+    <div class="choices" id="choiceList"></div>
+  `;
+
+  const list = document.getElementById('choiceList');
+  scene.choices.forEach(choice=>{
+    const btn = document.createElement('button');
+    btn.className = 'choice-card';
+    btn.innerHTML = `<span class="k">${choice.key}</span>${choice.label}`;
+    btn.addEventListener('click', ()=> selectChoice(scene, choice));
+    list.appendChild(btn);
+  });
+
+  renderTimeline();
+}
+
+function selectChoice(scene, choice){
+  applyEffects(choice.effects);
+  const nextId = typeof choice.next === 'function' ? choice.next(state) : choice.next;
+  state.history.push(state.currentSceneId);
+  state.currentSceneId = nextId;
+  renderScene();
+  window.scrollTo({top:0, behavior:'smooth'});
+}
+
+function renderEnding(){
+  const s = state.stats;
+  const archetype =
+    (s.career>65 && s.social<45) ? "The Builder — you shaped something lasting, often alone." :
+    (s.social>65 && s.career<45) ? "The Anchor — people remember you more than your resume ever will." :
+    (s.emotional>65) ? "The Steady One — whatever came, you made peace with it." :
+    (s.emotional<35) ? "The Weathered One — a hard road, carried as far as it could be." :
+    "The Balanced Path — no single thread dominated the weave.";
+
+  mainEl.innerHTML = `
+    <div class="epoch-tag">Epilogue</div>
+    <div class="ending-card">
+      <h2>${archetype}</h2>
+      <div class="scene-text">Your life, told through ${state.ledger.length} defining choices, spanning age 8 to ${state.age}. Every decision left a thread in the weave you can see beside you.</div>
+      <div class="ending-stats">
+        <div>Emotional<br><b>${s.emotional}</b></div>
+        <div>Social<br><b>${s.social}</b></div>
+        <div>Career<br><b>${s.career}</b></div>
+        <div>Risk Tolerance<br><b>${state.traits.riskTolerance}</b></div>
+        <div>Empathy<br><b>${state.traits.empathy}</b></div>
+      </div>
+      <button class="restart-btn" id="restartBtn">Live it differently →</button>
+    </div>
+  `;
+  document.getElementById('restartBtn').addEventListener('click', restart);
+  renderTimeline();
+}
+
+function restart(){
+  state.age = 8;
+  state.epoch = "Childhood";
+  state.stats = { emotional:50, social:50, career:30 };
+  state.traits = { riskTolerance:50, empathy:50, ambition:50 };
+  state.ledger = [];
+  state.currentSceneId = "child_1";
+  state.history = [];
+  renderScene();
+}
+
+renderScene();
+</script>
+</body>
+</html>
